@@ -1,1 +1,68 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lapak Voucher Wi-Fi</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { font-family: sans-serif; background: #f4f6f9; margin: 0; padding: 20px; text-align: center; }
+        .card { background: white; max-width: 350px; margin: 0 auto; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .stok { background: #e3f2fd; color: #0d47a1; padding: 10px; border-radius: 8px; font-weight: bold; margin-bottom: 20px; }
+        button { background: #2e7d32; color: white; border: none; padding: 15px; font-size: 16px; font-weight: bold; border-radius: 8px; width: 100%; cursor: pointer; }
+        #vcr-area { display: none; margin-top: 20px; padding-top: 15px; border-top: 2px dashed #ccc; }
+        #qrcode { display: flex; justify-content: center; margin: 15px 0; }
+        .kode { font-size: 22px; font-weight: bold; color: #d32f2f; background: #ffebee; padding: 8px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Lapak Voucher Wi-Fi</h2>
+    <div class="stok">Sisa Stok: <span id="stok-count">3</span> Voucher</div>
+
+    <button onclick="ambilVoucher()">🎟️ AMBIL 1 VOUCHER (Rp 3.000)</button>
+
+    <div id="vcr-area">
+        <p style="margin:0; font-size:14px; color:#555;">Scan QR Code untuk Login:</p>
+        <div id="qrcode"></div>
+        <p style="margin:5px 0 0 0; font-size:12px;">Kode Voucher:</p>
+        <div class="kode" id="kode-voucher">-</div>
+    </div>
+</div>
+
+<script>
+    // Data voucher untuk tes langsung
+    let daftarVoucher = ["USER01", "USER02", "USER03"];
+
+    function updateStok() {
+        let terpakai = JSON.parse(localStorage.getItem('vcr_terpakai') || '[]');
+        let sisa = daftarVoucher.length - terpakai.length;
+        document.getElementById('stok-count').innerText = sisa > 0 ? sisa : 0;
+    }
+
+    function ambilVoucher() {
+        let terpakai = JSON.parse(localStorage.getItem('vcr_terpakai') || '[]');
+        let vcr = daftarVoucher.find(v => !terpakai.includes(v));
+
+        if (!vcr) {
+            alert('Stok Voucher Habis!');
+            return;
+        }
+
+        document.getElementById('kode-voucher').innerText = vcr;
+        document.getElementById('qrcode').innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), { text: vcr, width: 160, height: 160 });
+        document.getElementById('vcr-area').style.display = 'block';
+
+        terpakai.push(vcr);
+        localStorage.setItem('vcr_terpakai', JSON.stringify(terpakai));
+        updateStok();
+    }
+
+    updateStok();
+</script>
+
+</body>
+</html>
 
