@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lapak Voucher Wi-Fi</title>
+    <title>Lapak Voucher Wi-Fi Fakri</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         body { font-family: sans-serif; background: #f4f6f9; margin: 0; padding: 20px; text-align: center; }
@@ -18,8 +18,8 @@
 <body>
 
 <div class="card">
-    <h2>Lapak Voucher Wi-Fi</h2>
-    <div class="stok">Sisa Stok: <span id="stok-count">3</span> Voucher</div>
+    <h2>Lapak Voucher Wi-Fi Fakri</h2>
+    <div class="stok">Sisa Stok: <span id="stok-count">Memuat...</span> Voucher</div>
 
     <button onclick="ambilVoucher()">🎟️ AMBIL 1 VOUCHER (Rp 3.000)</button>
 
@@ -32,21 +32,40 @@
 </div>
 
 <script>
-    // Data voucher untuk tes langsung
-    let daftarVoucher = ["USER01", "USER02", "USER03"];
+    const SHEET_ID = '1HVV34-02cAfbKsDZeTPj2hDBxzVcQ8Yd9fhKvOZgPcI';
+    // Menggunakan API GViz yang tidak butuh "Publikasikan ke web"
+    const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+
+    let daftarVoucher = [];
+
+    async function loadVouchersFromSheets() {
+        try {
+            const response = await fetch(GVIZ_URL);
+            const data = await response.text();
+            
+            // Bersihkan format CSV dari Google Sheets
+            daftarVoucher = data.split('\n')
+                                .map(row => row.split(',')[0].replace(/"/g, '').trim())
+                                .filter(v => v !== '');
+
+            updateStok();
+        } catch (error) {
+            alert('Gagal memuat data! Pastikan di Google Sheets "Kelola Akses" sudah diatur ke "Siapa saja yang memiliki link".');
+        }
+    }
 
     function updateStok() {
-        let terpakai = JSON.parse(localStorage.getItem('vcr_terpakai') || '[]');
+        let terpakai = JSON.parse(localStorage.getItem('vcr_terpakai_fakri') || '[]');
         let sisa = daftarVoucher.length - terpakai.length;
         document.getElementById('stok-count').innerText = sisa > 0 ? sisa : 0;
     }
 
     function ambilVoucher() {
-        let terpakai = JSON.parse(localStorage.getItem('vcr_terpakai') || '[]');
+        let terpakai = JSON.parse(localStorage.getItem('vcr_terpakai_fakri') || '[]');
         let vcr = daftarVoucher.find(v => !terpakai.includes(v));
 
         if (!vcr) {
-            alert('Stok Voucher Habis!');
+            alert('Stok Voucher Habis! Silakan Minta Isi Ulang.');
             return;
         }
 
@@ -56,13 +75,12 @@
         document.getElementById('vcr-area').style.display = 'block';
 
         terpakai.push(vcr);
-        localStorage.setItem('vcr_terpakai', JSON.stringify(terpakai));
+        localStorage.setItem('vcr_terpakai_fakri', JSON.stringify(terpakai));
         updateStok();
     }
 
-    updateStok();
+    loadVouchersFromSheets();
 </script>
 
 </body>
 </html>
-
