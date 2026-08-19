@@ -10,7 +10,8 @@
         body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .card-login { max-width: 400px; margin: 80px auto; border-radius: 12px; }
         .badge-role { font-size: 0.8rem; }
-        .voucher-box { border: 2px dashed #0d6efd; background: #eef5ff; border-radius: 10px; padding: 20px; }
+        .voucher-box { border: 2px dashed #0d6efd; background: #eef5ff; border-radius: 12px; padding: 20px; }
+        .qr-img { width: 140px; height: 140px; border-radius: 8px; border: 1px solid #dee2e6; padding: 5px; background: #fff; }
     </style>
 </head>
 <body>
@@ -62,14 +63,30 @@
                 </div>
                 <div class="modal-body text-center">
                     <div class="voucher-box mb-3">
-                        <small class="text-muted d-block mb-1">KODE VOUCHER / USERNAME</small>
-                        <h1 class="fw-bold text-primary mb-2" id="vKode">------</h1>
-                        <small class="text-muted d-block mb-1">PASSWORD</small>
-                        <h3 class="fw-bold text-dark" id="vPass">------</h3>
-                        <hr>
-                        <span class="badge bg-success fs-6" id="vHarga">Rp -</span>
+                        <!-- QR Code -->
+                        <div class="mb-3">
+                            <img id="vQR" src="" alt="QR Code Voucher" class="qr-img shadow-sm">
+                        </div>
+
+                        <!-- Kode Voucher -->
+                        <small class="text-muted d-block mb-1">KODE VOUCHER</small>
+                        <h1 class="fw-bold text-primary mb-2" id="vKode" style="letter-spacing: 2px;">------</h1>
+
+                        <div class="mb-3">
+                            <span class="badge bg-success fs-6" id="vHarga">Rp -</span>
+                        </div>
+
+                        <!-- Tombol Aksi Cepat -->
+                        <div class="d-flex justify-content-center gap-2 mt-3">
+                            <button class="btn btn-sm btn-outline-primary fw-bold" onclick="copyVoucher()">
+                                <i class="bi bi-clipboard"></i> Salin Kode
+                            </button>
+                            <button class="btn btn-sm btn-success fw-bold" onclick="shareWA()">
+                                <i class="bi bi-whatsapp"></i> Kirim ke WA
+                            </button>
+                        </div>
                     </div>
-                    <p class="text-muted small mb-0">Silakan serahkan kode voucher di atas kepada pembeli.</p>
+                    <p class="text-muted small mb-0">Silakan scan QR atau masukkan kode voucher untuk login WiFi.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Tutup</button>
@@ -80,7 +97,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // WEB APP URL TERBARU GOOGLE SHEETS
+        // WEB APP URL GOOGLE SHEETS
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwHAl6eRoJRRwdq6SJG29-be_I6LKJueZxqe0IWBSl2oucaH09MiCUBtivD5ZEMOgUDqQ/exec";
 
         // Database User Sederhana
@@ -93,6 +110,8 @@
         ];
 
         let currentUser = null;
+        let activeVoucherCode = "";
+        let activeVoucherPrice = "";
 
         // Login Process
         document.getElementById("loginForm").addEventListener("submit", function(e) {
@@ -158,7 +177,7 @@
             }
         }
 
-        // FUNGSI AMBIL VOUCHER KE GOOGLE SHEETS (BEBAS CORS)
+        // FUNGSI AMBIL VOUCHER KE GOOGLE SHEETS
         function ambilVoucher(serverOwner) {
             const btn = document.getElementById("btnAmbil");
             btn.disabled = true;
@@ -172,7 +191,7 @@
             fetch(WEB_APP_URL, {
                 method: "POST",
                 headers: {
-                    "Content-Type": "text/plain;charset=utf-8", // Format aman untuk CORS Google Apps Script
+                    "Content-Type": "text/plain;charset=utf-8",
                 },
                 body: JSON.stringify(payload)
             })
@@ -182,9 +201,15 @@
                 btn.innerHTML = `<i class="bi bi-qr-code"></i> AMBIL VOUCHER`;
 
                 if (data.status === "success") {
+                    activeVoucherCode = data.kode;
+                    activeVoucherPrice = data.harga;
+
                     document.getElementById("vKode").innerText = data.kode;
-                    document.getElementById("vPass").innerText = data.password;
                     document.getElementById("vHarga").innerText = "Rp " + data.harga;
+                    
+                    // Generate QR Code via API
+                    const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(data.kode);
+                    document.getElementById("vQR").src = qrUrl;
 
                     currentUser.sold += 1;
                     document.getElementById("opSold").innerText = currentUser.sold + " Voucher";
@@ -201,6 +226,22 @@
                 alert("Terjadi kesalahan koneksi atau stok voucher tidak tersedia!");
                 console.error(err);
             });
+        }
+
+        // FUNGSI SALIN KODE VOUCHER
+        function copyVoucher() {
+            if (!activeVoucherCode) return;
+            navigator.clipboard.writeText(activeVoucherCode).then(() => {
+                alert("Kode Voucher (" + activeVoucherCode + ") berhasil disalin ke clipboard!");
+            });
+        }
+
+        // FUNGSI KIRIM KE WHATSAPP
+        function shareWA() {
+            if (!activeVoucherCode) return;
+            const pesan = `*BTD LAPAK VOUCHER*\n------------------------------\nBerikut Kode Voucher Hotspot Anda:\n\nKode / Password: *${activeVoucherCode}*\nHarga: Rp ${activeVoucherPrice}\n\nTerima kasih telah membeli!`;
+            const waUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(pesan);
+            window.open(waUrl, '_blank');
         }
 
         function logout() {
