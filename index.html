@@ -97,7 +97,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // WEB APP URL LATEST GOOGLE SHEETS
+        // WEB APP URL APPS SCRIPT
         const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsn5YBWXUlvQC3KCOq6R5_U4_m5ZebzZ8rpL1RpKe2GdOxg5-YXeFyN2QzFCFIHAWJaw/exec";
 
         // Database User Sederhana
@@ -154,7 +154,7 @@
                     <div class="card shadow-sm border-0">
                         <div class="card-body text-center p-5">
                             <h4>Menu Kasir Operator (${user.server})</h4>
-                            <p class="text-muted">Klik tombol di bawah untuk mengeluarkan voucher dari stok ${user.server}</p>
+                            <p class="text-muted">Klik tombol di bawah untuk mengeluarkan voucher dari stok reseller ${user.server}</p>
                             <button id="btnAmbil" onclick="ambilVoucher('${user.server}')" class="btn btn-lg btn-primary px-5 py-3 fw-bold shadow">
                                 <i class="bi bi-qr-code"></i> AMBIL VOUCHER
                             </button>
@@ -166,41 +166,28 @@
                     <div class="card shadow-sm border-0">
                         <div class="card-body p-4">
                             <h5 class="fw-bold mb-3">Dashboard Reseller (${user.server})</h5>
-                            <p class="text-muted">Fitur kelola stok operator & rekap harian reseller ${user.server} siap diintegrasikan.</p>
+                            <p class="text-muted">Kelola stok voucher untuk operator ${user.server}.</p>
                         </div>
                     </div>
                 `;
             } else {
                 contentDiv.innerHTML = `
-                    <div class="alert alert-info">Dashboard Super Admin: Mengontrol seluruh transaksi server Fakri & Munzir.</div>
+                    <div class="alert alert-info">Dashboard Super Admin: Kontrol transaksi seluruh server.</div>
                 `;
             }
         }
 
-        // FUNGSI AMBIL VOUCHER KE GOOGLE SHEETS (DENGAN REDIRECT HANDLER & CORS SAFE)
+        // FUNGSI AMBIL VOUCHER CEPAT DAN BEBAS ERROR CORS
         function ambilVoucher(serverOwner) {
             const btn = document.getElementById("btnAmbil");
             btn.disabled = true;
             btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Memproses...`;
 
-            const payload = {
-                action: "getVoucher",
-                server: serverOwner
-            };
+            // Menggunakan GET Request dengan timestamp untuk menghindari caching browser
+            const targetUrl = `${WEB_APP_URL}?action=getVoucher&server=${encodeURIComponent(serverOwner)}&_=${new Date().getTime()}`;
 
-            fetch(WEB_APP_URL, {
-                method: "POST",
-                mode: "cors",
-                redirect: "follow", // Memastikan penanganan redirect 302 dari Google Apps Script
-                headers: {
-                    "Content-Type": "text/plain;charset=utf-8",
-                },
-                body: JSON.stringify(payload)
-            })
-            .then(res => {
-                if (!res.ok) throw new Error("Network response was not ok");
-                return res.json();
-            })
+            fetch(targetUrl)
+            .then(res => res.json())
             .then(data => {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-qr-code"></i> AMBIL VOUCHER`;
@@ -228,7 +215,7 @@
             .catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-qr-code"></i> AMBIL VOUCHER`;
-                alert("Gagal memproses data. Silakan coba tekan tombol sekali lagi.");
+                alert("Terjadi kesalahan sistem. Silakan coba klik sekali lagi.");
                 console.error("Detail Error:", err);
             });
         }
@@ -237,7 +224,7 @@
         function copyVoucher() {
             if (!activeVoucherCode) return;
             navigator.clipboard.writeText(activeVoucherCode).then(() => {
-                alert("Kode Voucher (" + activeVoucherCode + ") berhasil disalin ke clipboard!");
+                alert("Kode Voucher (" + activeVoucherCode + ") berhasil disalin!");
             });
         }
 
