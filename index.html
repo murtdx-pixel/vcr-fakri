@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lapak Voucher Hotspot</title>
+    <title>btd Lapak Voucher</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <style>
         body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         .card-login { max-width: 400px; margin: 80px auto; border-radius: 12px; }
         .badge-role { font-size: 0.8rem; }
+        .voucher-box { border: 2px dashed #0d6efd; background: #eef5ff; border-radius: 10px; padding: 20px; }
     </style>
 </head>
 <body>
@@ -17,8 +19,8 @@
     <div id="loginSection" class="container">
         <div class="card card-login shadow-sm border-0">
             <div class="card-body p-4">
-                <h4 class="text-center fw-bold mb-3">Lapak Voucher</h4>
-                <p class="text-muted text-center small mb-4">Silakan login sesuai akun Anda</p>
+                <h4 class="text-center fw-bold mb-1 text-primary">btd Lapak Voucher</h4>
+                <p class="text-muted text-center small mb-4">Masuk ke Sistem Kasir & Reseller</p>
                 <form id="loginForm">
                     <div class="mb-3">
                         <label class="form-label">Username</label>
@@ -34,7 +36,7 @@
         </div>
     </div>
 
-    <!-- SECTION 2: DASHBOARD (AKAN TAMPIL SETELAH LOGIN) -->
+    <!-- SECTION 2: DASHBOARD -->
     <div id="dashboardSection" class="container my-4" style="display: none;">
         <!-- Header Info User -->
         <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
@@ -43,26 +45,55 @@
                 <span class="badge bg-primary badge-role" id="displayRole">Role</span>
                 <span class="badge bg-secondary badge-role" id="displayServer">Server</span>
             </div>
-            <button class="btn btn-outline-danger btn-sm" onclick="logout()">Logout</button>
+            <button class="btn btn-outline-danger btn-sm" onclick="logout()"><i class="bi bi-box-arrow-right"></i> Logout</button>
         </div>
 
         <!-- Panel Konten Berdasarkan Role -->
-        <div id="roleContent">
-            <!-- Konten dinamis akan di-inject lewat Javascript -->
+        <div id="roleContent"></div>
+    </div>
+
+    <!-- MODAL POPUP VOUCHER -->
+    <div class="modal fade" id="voucherModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Voucher WiFi Berhasil Diambil</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <div class="voucher-box mb-3">
+                        <small class="text-muted d-block mb-1">KODE VOUCHER / USERNAME</small>
+                        <h1 class="fw-bold text-primary mb-2" id="vKode">------</h1>
+                        <small class="text-muted d-block mb-1">PASSWORD</small>
+                        <h3 class="fw-bold text-dark" id="vPass">------</h3>
+                        <hr>
+                        <span class="badge bg-success" id="vHarga">Rp -</span>
+                    </div>
+                    <p class="text-muted small">Silakan serahkan kode voucher di atas kepada pembeli.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Data Dummy Akun untuk Pengujian Awal
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzMHGQJynOKy5Rca6F3LoQCzhmatfmjVZdM_1SrlOahBOA1zjeI0a2rIF-cJgPy2jY00g/exec";
+
+        // Database User Sederhana
         const usersDB = [
             { username: "admin", pass: "admin123", role: "Super Admin", server: "ALL" },
             { username: "fakri", pass: "fakri123", role: "Reseller", server: "Fakri" },
             { username: "munzir", pass: "munzir123", role: "Reseller", server: "Munzir" },
-            { username: "operator_f1", pass: "op123", role: "Operator", server: "Fakri", stokQuota: 20, sold: 0 },
-            { username: "operator_m1", pass: "op123", role: "Operator", server: "Munzir", stokQuota: 15, sold: 0 }
+            { username: "operator_f1", pass: "op123", role: "Operator", server: "Fakri", sold: 0 },
+            { username: "operator_m1", pass: "op123", role: "Operator", server: "Munzir", sold: 0 }
         ];
 
-        // Proses Login
+        let currentUser = null;
+
+        // Login Process
         document.getElementById("loginForm").addEventListener("submit", function(e) {
             e.preventDefault();
             const u = document.getElementById("username").value;
@@ -71,14 +102,13 @@
             const user = usersDB.find(x => x.username === u && x.pass === p);
 
             if (user) {
-                localStorage.setItem("sessionUser", JSON.stringify(user));
+                currentUser = user;
                 loadDashboard(user);
             } else {
                 alert("Username atau Password salah!");
             }
         });
 
-        // Load Dashboard
         function loadDashboard(user) {
             document.getElementById("loginSection").style.display = "none";
             document.getElementById("dashboardSection").style.display = "block";
@@ -91,29 +121,21 @@
 
             if (user.role === "Operator") {
                 contentDiv.innerHTML = `
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <div class="card bg-info text-white border-0 shadow-sm">
-                                <div class="card-body">
-                                    <h6>Sisa Kuota Stok Hari Ini</h6>
-                                    <h2 class="fw-bold">${user.stokQuota} Voucher</h2>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="card bg-success text-white border-0 shadow-sm">
-                                <div class="card-body">
-                                    <h6>Voucher Terjual (Saya)</h6>
-                                    <h2 class="fw-bold">${user.sold} Voucher</h2>
+                    <div class="row g-3 justify-content-center">
+                        <div class="col-md-6">
+                            <div class="card bg-success text-white border-0 shadow-sm mb-3">
+                                <div class="card-body text-center">
+                                    <h6>Total Voucher Terjual (Saya)</h6>
+                                    <h2 class="fw-bold" id="opSold">${user.sold} Voucher</h2>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="card mt-4 shadow-sm border-0">
+                    <div class="card shadow-sm border-0">
                         <div class="card-body text-center p-5">
-                            <h4>Menu Kasir Operator</h4>
-                            <p class="text-muted">Klik tombol di bawah untuk mengeluarkan kode voucher ke pelanggan</p>
-                            <button class="btn btn-lg btn-primary px-5 py-3 fw-bold shadow">
+                            <h4>Menu Kasir Operator (${user.server})</h4>
+                            <p class="text-muted">Klik tombol di bawah untuk mengeluarkan voucher dari stok ${user.server}</p>
+                            <button id="btnAmbil" onclick="ambilVoucher('${user.server}')" class="btn btn-lg btn-primary px-5 py-3 fw-bold shadow">
                                 <i class="bi bi-qr-code"></i> AMBIL VOUCHER
                             </button>
                         </div>
@@ -121,33 +143,61 @@
                 `;
             } else if (user.role === "Reseller") {
                 contentDiv.innerHTML = `
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-6">
-                            <div class="card bg-primary text-white border-0 shadow-sm">
-                                <div class="card-body">
-                                    <h6>Total Stok Server (${user.server})</h6>
-                                    <h2 class="fw-bold">Memuat...</h2>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                     <div class="card shadow-sm border-0">
-                        <div class="card-body">
-                            <h5 class="fw-bold mb-3">Kelola / Isi Stok Operator</h5>
-                            <button class="btn btn-success mb-3">+ Top-Up Stok ke Operator</button>
-                            <p class="text-muted small">Daftar Rekap Penjualan Operator Bawaan Anda akan tampil di sini.</p>
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-3">Dashboard Reseller (${user.server})</h5>
+                            <p class="text-muted">Fitur kelola stok operator & rekap harian reseller ${user.server} siap diintegrasikan.</p>
                         </div>
                     </div>
                 `;
             } else {
                 contentDiv.innerHTML = `
-                    <div class="alert alert-warning">Dashboard Super Admin: Menampilkan seluruh performa server Fakri & Munzir.</div>
+                    <div class="alert alert-info">Dashboard Super Admin: Mengontrol seluruh transaksi server Fakri & Munzir.</div>
                 `;
             }
         }
 
+        // FUNGSI AMBIL VOUCHER KE GOOGLE SHEETS
+        function ambilVoucher(serverOwner) {
+            const btn = document.getElementById("btnAmbil");
+            btn.disabled = true;
+            btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Memproses...`;
+
+            fetch(WEB_APP_URL, {
+                method: "POST",
+                body: JSON.stringify({
+                    action: "getVoucher",
+                    server: serverOwner
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-qr-code"></i> AMBIL VOUCHER`;
+
+                if (data.status === "success") {
+                    document.getElementById("vKode").innerText = data.kode;
+                    document.getElementById("vPass").innerText = data.password;
+                    document.getElementById("vHarga").innerText = "Rp " + data.harga;
+
+                    currentUser.sold += 1;
+                    document.getElementById("opSold").innerText = currentUser.sold + " Voucher";
+
+                    var myModal = new bootstrap.Modal(document.getElementById('voucherModal'));
+                    myModal.show();
+                } else {
+                    alert("Gagal: " + (data.message || "Stok voucher habis atau tidak ditemukan!"));
+                }
+            })
+            .catch(err => {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="bi bi-qr-code"></i> AMBIL VOUCHER`;
+                alert("Terjadi kesalahan koneksi ke server!");
+                console.error(err);
+            });
+        }
+
         function logout() {
-            localStorage.removeItem("sessionUser");
             location.reload();
         }
     </script>
