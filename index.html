@@ -3,177 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lapak Voucher Wi-Fi Fakri</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <title>Lapak Voucher Hotspot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f9; margin: 0; padding: 15px; text-align: center; color: #333; }
-        .card { background: white; max-width: 380px; margin: 0 auto; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); }
-        h2 { margin-top: 5px; color: #1e293b; font-size: 22px; }
-        
-        /* Dashboards & Info Boxes */
-        .grid-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .info-box { background: #f8fafc; padding: 10px; border-radius: 10px; border: 1px solid #e2e8f0; text-align: center; }
-        .info-box.stok-box { background: #eff6ff; border-color: #bfdbfe; grid-column: span 2; }
-        .info-title { font-size: 11px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; }
-        .info-value { font-size: 18px; font-weight: bold; color: #1e293b; margin-top: 2px; }
-        .stok-value { color: #1d4ed8; font-size: 22px; }
-        
-        .btn-main { background: #16a34a; color: white; border: none; padding: 14px; font-size: 16px; font-weight: bold; border-radius: 10px; width: 100%; cursor: pointer; box-shadow: 0 3px 8px rgba(22, 163, 74, 0.3); transition: 0.2s; }
-        .btn-main:active { transform: scale(0.98); }
-        
-        #vcr-area { display: none; margin-top: 20px; padding-top: 15px; border-top: 2px dashed #cbd5e1; }
-        #qrcode { display: flex; justify-content: center; margin: 15px 0; }
-        
-        .kode-container { display: flex; align-items: center; justify-content: center; gap: 8px; background: #fef2f2; border: 1px solid #fecaca; padding: 8px; border-radius: 8px; margin-top: 5px; }
-        .kode { font-size: 22px; font-weight: bold; color: #dc2626; letter-spacing: 1px; }
-        .btn-copy { background: #dc2626; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
-        
-        /* Ringkasan Penjualan */
-        .history-box { margin-top: 20px; font-size: 12px; color: #64748b; text-align: left; background: #f8fafc; padding: 10px; border-radius: 8px; border: 1px solid #e2e8f0; }
-        .history-title { font-weight: bold; color: #334155; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; }
-        .btn-reset { background: #ef4444; color: white; border: none; padding: 3px 8px; border-radius: 4px; font-size: 10px; cursor: pointer; }
+        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card-login { max-width: 400px; margin: 80px auto; border-radius: 12px; }
+        .badge-role { font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-<div class="card">
-    <h2>Lapak Voucher Wi-Fi Fakri</h2>
-
-    <!-- Ringkasan Stok & Omset -->
-    <div class="grid-info">
-        <div class="info-box stok-box">
-            <div class="info-title">Sisa Stok Voucher</div>
-            <div class="info-value stok-value"><span id="stok-count">0</span> Pcs</div>
-        </div>
-        <div class="info-box">
-            <div class="info-title">Laku Bulan Ini</div>
-            <div class="info-value"><span id="laku-bulan">0</span> pcs</div>
-        </div>
-        <div class="info-box">
-            <div class="info-title">Omset Bulan Ini</div>
-            <div class="info-value" style="color: #16a34a;">Rp <span id="omset-bulan">0</span></div>
-        </div>
-    </div>
-
-    <button class="btn-main" onclick="ambilVoucher()">🎟️ AMBIL 1 VOUCHER (Rp 3.000)</button>
-
-    <!-- Area Voucher Keluar -->
-    <div id="vcr-area">
-        <p style="margin:0; font-size:13px; color:#64748b;">Scan QR Code untuk Login:</p>
-        <div id="qrcode"></div>
-        <p style="margin:5px 0 0 0; font-size:12px; color:#64748b;">Kode Voucher:</p>
-        <div class="kode-container">
-            <span class="kode" id="kode-voucher">-</span>
-            <button class="btn-copy" onclick="salinKode()">📋 Salin</button>
+    <!-- SECTION 1: FORM LOGIN -->
+    <div id="loginSection" class="container">
+        <div class="card card-login shadow-sm border-0">
+            <div class="card-body p-4">
+                <h4 class="text-center fw-bold mb-3">Lapak Voucher</h4>
+                <p class="text-muted text-center small mb-4">Silakan login sesuai akun Anda</p>
+                <form id="loginForm">
+                    <div class="mb-3">
+                        <label class="form-label">Username</label>
+                        <input type="text" id="username" class="form-control" placeholder="Masukkan username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password</label>
+                        <input type="password" id="password" class="form-control" placeholder="Masukkan password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">Masuk</button>
+                </form>
+            </div>
         </div>
     </div>
 
-    <!-- Info Detail Transaksi -->
-    <div class="history-box">
-        <div class="history-title">
-            <span>📊 Ringkasan Penjualan</span>
-            <button class="btn-reset" onclick="resetBulan()">Reset Bulan Ini</button>
+    <!-- SECTION 2: DASHBOARD (AKAN TAMPIL SETELAH LOGIN) -->
+    <div id="dashboardSection" class="container my-4" style="display: none;">
+        <!-- Header Info User -->
+        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+            <div>
+                <h5 class="mb-0 fw-bold" id="displayName">Selamat Datang</h5>
+                <span class="badge bg-primary badge-role" id="displayRole">Role</span>
+                <span class="badge bg-secondary badge-role" id="displayServer">Server</span>
+            </div>
+            <button class="btn btn-outline-danger btn-sm" onclick="logout()">Logout</button>
         </div>
-        <div>Harga per voucher: <b>Rp 3.000</b></div>
-        <div>Total Keseluruhan Terjual: <b id="total-terjual">0</b> pcs</div>
+
+        <!-- Panel Konten Berdasarkan Role -->
+        <div id="roleContent">
+            <!-- Konten dinamis akan di-inject lewat Javascript -->
+        </div>
     </div>
-</div>
 
-<script>
-    const SHEET_ID = '1HVV34-02cAfbKsDZeTPj2hDBxzVcQ8Yd9fhKvOZgPcI';
-    const HARGA_VOUCHER = 3000;
-    const GVIZ_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv`;
+    <script>
+        // Data Dummy Akun untuk Pengujian Awal
+        const usersDB = [
+            { username: "admin", pass: "admin123", role: "Super Admin", server: "ALL" },
+            { username: "fakri", pass: "fakri123", role: "Reseller", server: "Fakri" },
+            { username: "munzir", pass: "munzir123", role: "Reseller", server: "Munzir" },
+            { username: "operator_f1", pass: "op123", role: "Operator", server: "Fakri", stokQuota: 20, sold: 0 },
+            { username: "operator_m1", pass: "op123", role: "Operator", server: "Munzir", stokQuota: 15, sold: 0 }
+        ];
 
-    let daftarVoucher = [];
+        // Proses Login
+        document.getElementById("loginForm").addEventListener("submit", function(e) {
+            e.preventDefault();
+            const u = document.getElementById("username").value;
+            const p = document.getElementById("password").value;
 
-    async function loadVouchersFromSheets() {
-        try {
-            const response = await fetch(GVIZ_URL);
-            const data = await response.text();
-            
-            daftarVoucher = data.split('\n')
-                                .map(row => row.split(',')[0].replace(/"/g, '').trim())
-                                .filter(v => v !== '');
+            const user = usersDB.find(x => x.username === u && x.pass === p);
 
-            updateDashboard();
-        } catch (error) {
-            alert('Gagal memuat data! Pastikan Google Sheets diset Publik.');
-        }
-    }
-
-    function getBulanSekarang() {
-        const d = new Date();
-        return `${d.getFullYear()}-${d.getMonth() + 1}`;
-    }
-
-    function updateDashboard() {
-        let riwayat = JSON.parse(localStorage.getItem('vcr_riwayat_fakri') || '[]');
-        let bulanIni = getBulanSekarang();
-
-        let transaksiBulanIni = riwayat.filter(item => item.bulan === bulanIni);
-        
-        let sisaStok = daftarVoucher.length - riwayat.length;
-        let totalLakuBulanIni = transaksiBulanIni.length;
-        let totalOmsetBulanIni = totalLakuBulanIni * HARGA_VOUCHER;
-
-        document.getElementById('stok-count').innerText = sisaStok > 0 ? sisaStok : 0;
-        document.getElementById('laku-bulan').innerText = totalLakuBulanIni;
-        document.getElementById('omset-bulan').innerText = totalOmsetBulanIni.toLocaleString('id-ID');
-        document.getElementById('total-terjual').innerText = riwayat.length;
-    }
-
-    function ambilVoucher() {
-        let riwayat = JSON.parse(localStorage.getItem('vcr_riwayat_fakri') || '[]');
-        let terpakaiKode = riwayat.map(item => item.kode);
-
-        let vcr = daftarVoucher.find(v => !terpakaiKode.includes(v));
-
-        if (!vcr) {
-            alert('Stok Voucher Habis! Silakan Minta Isi Ulang.');
-            return;
-        }
-
-        document.getElementById('kode-voucher').innerText = vcr;
-        document.getElementById('qrcode').innerHTML = "";
-        new QRCode(document.getElementById("qrcode"), { text: vcr, width: 160, height: 160 });
-        document.getElementById('vcr-area').style.display = 'block';
-
-        riwayat.push({
-            kode: vcr,
-            bulan: getBulanSekarang(),
-            waktu: new Date().toLocaleString('id-ID')
+            if (user) {
+                localStorage.setItem("sessionUser", JSON.stringify(user));
+                loadDashboard(user);
+            } else {
+                alert("Username atau Password salah!");
+            }
         });
 
-        localStorage.setItem('vcr_riwayat_fakri', JSON.stringify(riwayat));
-        updateDashboard();
-    }
+        // Load Dashboard
+        function loadDashboard(user) {
+            document.getElementById("loginSection").style.display = "none";
+            document.getElementById("dashboardSection").style.display = "block";
 
-    function salinKode() {
-        let kode = document.getElementById('kode-voucher').innerText;
-        if (kode && kode !== '-') {
-            let tempInput = document.createElement("input");
-            tempInput.value = kode;
-            document.body.appendChild(tempInput);
-            tempInput.select();
-            document.execCommand("copy");
-            document.body.removeChild(tempInput);
-            alert('Kode voucher berhasil disalin: ' + kode);
+            document.getElementById("displayName").innerText = "Halo, " + user.username;
+            document.getElementById("displayRole").innerText = user.role;
+            document.getElementById("displayServer").innerText = "Server: " + user.server;
+
+            const contentDiv = document.getElementById("roleContent");
+
+            if (user.role === "Operator") {
+                contentDiv.innerHTML = `
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="card bg-info text-white border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h6>Sisa Kuota Stok Hari Ini</h6>
+                                    <h2 class="fw-bold">${user.stokQuota} Voucher</h2>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card bg-success text-white border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h6>Voucher Terjual (Saya)</h6>
+                                    <h2 class="fw-bold">${user.sold} Voucher</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card mt-4 shadow-sm border-0">
+                        <div class="card-body text-center p-5">
+                            <h4>Menu Kasir Operator</h4>
+                            <p class="text-muted">Klik tombol di bawah untuk mengeluarkan kode voucher ke pelanggan</p>
+                            <button class="btn btn-lg btn-primary px-5 py-3 fw-bold shadow">
+                                <i class="bi bi-qr-code"></i> AMBIL VOUCHER
+                            </button>
+                        </div>
+                    </div>
+                `;
+            } else if (user.role === "Reseller") {
+                contentDiv.innerHTML = `
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="card bg-primary text-white border-0 shadow-sm">
+                                <div class="card-body">
+                                    <h6>Total Stok Server (${user.server})</h6>
+                                    <h2 class="fw-bold">Memuat...</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <h5 class="fw-bold mb-3">Kelola / Isi Stok Operator</h5>
+                            <button class="btn btn-success mb-3">+ Top-Up Stok ke Operator</button>
+                            <p class="text-muted small">Daftar Rekap Penjualan Operator Bawaan Anda akan tampil di sini.</p>
+                        </div>
+                    </div>
+                `;
+            } else {
+                contentDiv.innerHTML = `
+                    <div class="alert alert-warning">Dashboard Super Admin: Menampilkan seluruh performa server Fakri & Munzir.</div>
+                `;
+            }
         }
-    }
 
-    function resetBulan() {
-        if (confirm('Yakin ingin mereset catatan penjualan bulan ini?')) {
-            let riwayat = JSON.parse(localStorage.getItem('vcr_riwayat_fakri') || '[]');
-            let bulanIni = getBulanSekarang();
-            let riwayatBaru = riwayat.filter(item => item.bulan !== bulanIni);
-            localStorage.setItem('vcr_riwayat_fakri', JSON.stringify(riwayatBaru));
-            updateDashboard();
-            alert('Catatan bulan ini berhasil direset!');
+        function logout() {
+            localStorage.removeItem("sessionUser");
+            location.reload();
         }
-    }
-
-    loadVouchersFromSheets();
-</script>
-
+    </script>
 </body>
 </html>
