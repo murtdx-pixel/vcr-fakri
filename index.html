@@ -67,9 +67,9 @@
                         <small class="text-muted d-block mb-1">PASSWORD</small>
                         <h3 class="fw-bold text-dark" id="vPass">------</h3>
                         <hr>
-                        <span class="badge bg-success" id="vHarga">Rp -</span>
+                        <span class="badge bg-success fs-6" id="vHarga">Rp -</span>
                     </div>
-                    <p class="text-muted small">Silakan serahkan kode voucher di atas kepada pembeli.</p>
+                    <p class="text-muted small mb-0">Silakan serahkan kode voucher di atas kepada pembeli.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">Tutup</button>
@@ -80,7 +80,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzMHGQJynOKy5Rca6F3LoQCzhmatfmjVZdM_1SrlOahBOA1zjeI0a2rIF-cJgPy2jY00g/exec";
+        // WEB APP URL TERBARU GOOGLE SHEETS
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwHAl6eRoJRRwdq6SJG29-be_I6LKJueZxqe0IWBSl2oucaH09MiCUBtivD5ZEMOgUDqQ/exec";
 
         // Database User Sederhana
         const usersDB = [
@@ -157,18 +158,23 @@
             }
         }
 
-        // FUNGSI AMBIL VOUCHER KE GOOGLE SHEETS
+        // FUNGSI AMBIL VOUCHER KE GOOGLE SHEETS (BEBAS CORS)
         function ambilVoucher(serverOwner) {
             const btn = document.getElementById("btnAmbil");
             btn.disabled = true;
             btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Memproses...`;
 
+            const payload = {
+                action: "getVoucher",
+                server: serverOwner
+            };
+
             fetch(WEB_APP_URL, {
                 method: "POST",
-                body: JSON.stringify({
-                    action: "getVoucher",
-                    server: serverOwner
-                })
+                headers: {
+                    "Content-Type": "text/plain;charset=utf-8", // Format aman untuk CORS Google Apps Script
+                },
+                body: JSON.stringify(payload)
             })
             .then(res => res.json())
             .then(data => {
@@ -186,13 +192,13 @@
                     var myModal = new bootstrap.Modal(document.getElementById('voucherModal'));
                     myModal.show();
                 } else {
-                    alert("Gagal: " + (data.message || "Stok voucher habis atau tidak ditemukan!"));
+                    alert("Informasi: " + (data.message || "Stok voucher habis atau tidak ditemukan!"));
                 }
             })
             .catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-qr-code"></i> AMBIL VOUCHER`;
-                alert("Terjadi kesalahan koneksi ke server!");
+                alert("Terjadi kesalahan koneksi atau stok voucher tidak tersedia!");
                 console.error(err);
             });
         }
