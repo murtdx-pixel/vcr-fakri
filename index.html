@@ -97,8 +97,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // WEB APP URL GOOGLE SHEETS
-        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbwHAl6eRoJRRwdq6SJG29-be_I6LKJueZxqe0IWBSl2oucaH09MiCUBtivD5ZEMOgUDqQ/exec";
+        // WEB APP URL LATEST GOOGLE SHEETS
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzsn5YBWXUlvQC3KCOq6R5_U4_m5ZebzZ8rpL1RpKe2GdOxg5-YXeFyN2QzFCFIHAWJaw/exec";
 
         // Database User Sederhana
         const usersDB = [
@@ -177,7 +177,7 @@
             }
         }
 
-        // FUNGSI AMBIL VOUCHER KE GOOGLE SHEETS
+        // FUNGSI AMBIL VOUCHER KE GOOGLE SHEETS (DENGAN REDIRECT HANDLER & CORS SAFE)
         function ambilVoucher(serverOwner) {
             const btn = document.getElementById("btnAmbil");
             btn.disabled = true;
@@ -190,12 +190,17 @@
 
             fetch(WEB_APP_URL, {
                 method: "POST",
+                mode: "cors",
+                redirect: "follow", // Memastikan penanganan redirect 302 dari Google Apps Script
                 headers: {
                     "Content-Type": "text/plain;charset=utf-8",
                 },
                 body: JSON.stringify(payload)
             })
-            .then(res => res.json())
+            .then(res => {
+                if (!res.ok) throw new Error("Network response was not ok");
+                return res.json();
+            })
             .then(data => {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-qr-code"></i> AMBIL VOUCHER`;
@@ -207,7 +212,7 @@
                     document.getElementById("vKode").innerText = data.kode;
                     document.getElementById("vHarga").innerText = "Rp " + data.harga;
                     
-                    // Generate QR Code via API
+                    // QR Code Generator
                     const qrUrl = "https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=" + encodeURIComponent(data.kode);
                     document.getElementById("vQR").src = qrUrl;
 
@@ -223,8 +228,8 @@
             .catch(err => {
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-qr-code"></i> AMBIL VOUCHER`;
-                alert("Terjadi kesalahan koneksi atau stok voucher tidak tersedia!");
-                console.error(err);
+                alert("Gagal memproses data. Silakan coba tekan tombol sekali lagi.");
+                console.error("Detail Error:", err);
             });
         }
 
