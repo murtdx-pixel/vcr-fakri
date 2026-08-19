@@ -155,7 +155,7 @@
                         <div class="card-body text-center p-5">
                             <h4>Menu Kasir Operator (${user.server})</h4>
                             <p class="text-muted">Klik tombol di bawah untuk mengeluarkan voucher dari stok reseller ${user.server}</p>
-                            <button id="btnAmbil" onclick="ambilVoucher('${user.server}')" class="btn btn-lg btn-primary px-5 py-3 fw-bold shadow">
+                            <button id="btnAmbil" onclick="ambilVoucherJSONP('${user.server}')" class="btn btn-lg btn-primary px-5 py-3 fw-bold shadow">
                                 <i class="bi bi-qr-code"></i> AMBIL VOUCHER
                             </button>
                         </div>
@@ -177,18 +177,22 @@
             }
         }
 
-        // FUNGSI AMBIL VOUCHER CEPAT DAN BEBAS ERROR CORS
-        function ambilVoucher(serverOwner) {
+        // FUNGSI AMBIL VOUCHER MENGGUNAKAN TEKNIK JSONP (100% BEBAS CORS & SANGAT CEPAT)
+        function ambilVoucherJSONP(serverOwner) {
             const btn = document.getElementById("btnAmbil");
             btn.disabled = true;
             btn.innerHTML = `<span class="spinner-border spinner-border-sm"></span> Memproses...`;
 
-            // Menggunakan GET Request dengan timestamp untuk menghindari caching browser
-            const targetUrl = `${WEB_APP_URL}?action=getVoucher&server=${encodeURIComponent(serverOwner)}&_=${new Date().getTime()}`;
+            // Buat Nama Callback Unik
+            const callbackName = "cb_" + Math.round(100000 * Math.random());
 
-            fetch(targetUrl)
-            .then(res => res.json())
-            .then(data => {
+            // Daftarkan Fungsi Callback Global
+            window[callbackName] = function(data) {
+                // Bersihkan tag script setelah selesai
+                delete window[callbackName];
+                const scriptTag = document.getElementById(callbackName);
+                if (scriptTag) scriptTag.remove();
+
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-qr-code"></i> AMBIL VOUCHER`;
 
@@ -211,13 +215,21 @@
                 } else {
                     alert("Informasi: " + (data.message || "Stok voucher habis atau tidak ditemukan!"));
                 }
-            })
-            .catch(err => {
+            };
+
+            // Buat Script Tag untuk Permintaan JSONP
+            const script = document.createElement("script");
+            script.id = callbackName;
+            script.src = `${WEB_APP_URL}?action=getVoucher&server=${encodeURIComponent(serverOwner)}&callback=${callbackName}&_=${new Date().getTime()}`;
+            
+            script.onerror = function() {
+                delete window[callbackName];
                 btn.disabled = false;
                 btn.innerHTML = `<i class="bi bi-qr-code"></i> AMBIL VOUCHER`;
-                alert("Terjadi kesalahan sistem. Silakan coba klik sekali lagi.");
-                console.error("Detail Error:", err);
-            });
+                alert("Gagal terhubung ke server Google Sheets. Periksa koneksi internet Anda.");
+            };
+
+            document.body.appendChild(script);
         }
 
         // FUNGSI SALIN KODE VOUCHER
